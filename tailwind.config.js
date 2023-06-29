@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       backgroundImage: {
-        'pattern': "url('/public/img/background/bg_main_sp.jpg')",
-        'banner': "url('/public/img/background/bg_ttl.png')",
-        'banner-character': "url('/public/img/background/t_ttl_character.png')",
+        'pattern': "url('./assets/background/bg_main_pc.jpg')",
+        'banner': "url('./assets/background/bg_ttl.png')",
+        'banner-character': "url('./assets/background/t_ttl_character.png')",
       }
     },
   },
