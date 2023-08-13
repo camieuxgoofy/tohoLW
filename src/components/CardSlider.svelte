@@ -22,6 +22,7 @@
     activeIndex = activeIndex < maxSlide ? activeIndex + 1 : 0;
   }
 
+  // Grabbing
   function handleTouchStart(event: TouchEvent | MouseEvent) {
     startX =
       event instanceof TouchEvent ? event.touches[0].clientX : event.clientX;
@@ -87,6 +88,7 @@
     window.removeEventListener("mouseup", handleTouchEnd);
     window.removeEventListener("touchend", handleTouchEnd);
   });
+  // End Grabbing
 </script>
 
 <div
