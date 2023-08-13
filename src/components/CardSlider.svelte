@@ -1,8 +1,14 @@
 <script lang="ts">
+  import { onDestroy, onMount } from "svelte";
   import { characters } from "../index";
 
   let activeIndex = 0;
   let maxSlide = 0;
+  let startX: number | null = null;
+  let isDragging = false;
+  let prevTranslate = 0;
+  let currentTranslate = 0;
+  let slidesContainer: HTMLElement | null = null;
 
   $: {
     maxSlide = $characters.length - 1;
@@ -15,13 +21,79 @@
   function nextSlide() {
     activeIndex = activeIndex < maxSlide ? activeIndex + 1 : 0;
   }
+
+  function handleTouchStart(event: TouchEvent | MouseEvent) {
+    startX =
+      event instanceof TouchEvent ? event.touches[0].clientX : event.clientX;
+    prevTranslate = currentTranslate;
+
+    if (slidesContainer) {
+      slidesContainer.classList.remove("slide-container");
+      slidesContainer.style.cursor = "grabbing";
+    }
+
+    isDragging = true;
+  }
+
+  function handleTouchMove(event: TouchEvent | MouseEvent) {
+    if (!isDragging || slidesContainer === null) return;
+
+    const currentPosition =
+      event instanceof TouchEvent ? event.touches[0].clientX : event.clientX;
+    const diff = currentPosition - (startX as number);
+    currentTranslate = prevTranslate + diff;
+    slidesContainer.style.transform = `translateX(${currentTranslate}px)`;
+  }
+
+  function handleTouchEnd() {
+    isDragging = false;
+
+    if (slidesContainer) {
+      slidesContainer.classList.add("slide-container");
+      slidesContainer.style.cursor = "grab";
+    }
+
+    if (Math.abs(currentTranslate - prevTranslate) > 50) {
+      if (currentTranslate > prevTranslate) {
+        previousSlide();
+      } else {
+        nextSlide();
+      }
+    }
+    prevTranslate = activeIndex * -100;
+    currentTranslate = prevTranslate;
+    if (slidesContainer && slidesContainer.style) {
+      slidesContainer.style.transform = `translateX(${currentTranslate}%)`;
+    }
+  }
+
+  onMount(() => {
+    slidesContainer = document.querySelector(".slide-container");
+    slidesContainer?.addEventListener("mousedown", handleTouchStart);
+    slidesContainer?.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+    window.addEventListener("mousemove", handleTouchMove);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("mouseup", handleTouchEnd);
+    window.addEventListener("touchend", handleTouchEnd);
+  });
+
+  onDestroy(() => {
+    slidesContainer?.removeEventListener("mousedown", handleTouchStart);
+    slidesContainer?.removeEventListener("touchstart", handleTouchStart);
+    window.removeEventListener("mousemove", handleTouchMove);
+    window.removeEventListener("touchmove", handleTouchMove);
+    window.removeEventListener("mouseup", handleTouchEnd);
+    window.removeEventListener("touchend", handleTouchEnd);
+  });
 </script>
 
 <div
-  class="relative bg-white rounded-lg p-6 md:mt-12 md:mx-0 mx-5 shadow-[0px_0px_10px_5px_rgba(0,0,0,0.1)] text-black overflow-hidden"
+  class="relative bg-white rounded-lg p-6 md:mt-12 md:mx-0 mx-5 shadow-[0px_0px_10px_5px_rgba(0,0,0,0.1)] text-black overflow-hidden select-none"
 >
   <div
-    class="duration-500 flex"
+    class="slide-container duration-500 flex"
     style="transform: translateX(calc(-{activeIndex} * 100%));"
   >
     {#each $characters as character, index}
@@ -32,8 +104,9 @@
       >
         <img
           src={character.charImage}
-          class="mx-auto md:w-2/3 h-full"
+          class="mx-auto md:w-2/3 h-fulle"
           alt={character.name}
+          draggable="false"
         />
         <div class="relative md:mt-16 mt-4">
           <div
